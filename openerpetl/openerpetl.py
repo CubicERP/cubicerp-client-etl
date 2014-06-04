@@ -202,6 +202,7 @@ class oer_etl(object):
             val = eval(map['value'],row)
             if map['mapping_id']:
                 val = self.get_value_mapping(map['mapping_id'][0],val,job_id)
+            row['__value_mapping__'] = val
             if map['field_type'] in ('char','text','selection'):
                 if val and type(val) is not unicode and job['query_encoding']:
                     val = val.decode(job['query_encoding'])
@@ -211,9 +212,9 @@ class oer_etl(object):
             elif map['field_type'] == 'datetime':
                 if val and (type(val) is not str or type(val) is not unicode):
                     val = val.strftime('%Y-%m-%d %H:%M:%S')
-            elif not map['search_null'] and not val:
+            elif map['search_null'] and (not val):
                 pass
-            elif map['field_type'] == 'many2one' and map.get('search_null',True):
+            elif map['field_type'] == 'many2one':
                 val_obj = self.get_connection(job['dst_server_id'][0]).get_model(map['field_relation'])
                 if map['name_search']:
                     val_ids = val_obj.search(eval(map['name_search'],row))
@@ -297,6 +298,6 @@ class oer_etl(object):
             exc_type, exc_value, exc_traceback = stack
             stack = traceback.format_exception(exc_type, exc_value, exc_traceback)
             vals['traceback'] = ''.join(stack)
-        if self.log_print: print to_print
+        if self.log_print: print to_print.encode('ascii','replace')
         return log_obj.create(vals)
     
