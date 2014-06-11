@@ -81,6 +81,10 @@ class oer_etl(object):
             self.__jobs[job_id] = res
         return res
     
+    def get_job_state(self, job_id):
+        job_obj = self.local.get_model('etl.job')
+        return job_obj.read([job_id])[0]['state']
+    
     def get_server(self, server_id):
         res = False
         if self.__servers.has_key(server_id):
@@ -207,7 +211,7 @@ class oer_etl(object):
                 if val and type(val) is not unicode and job['query_encoding']:
                     val = val.decode(job['query_encoding'])
             elif map['field_type'] == 'date':
-                if val and (type(val) is not str or type(val) is not unicode):
+                if val and type(val) not in (str, unicode):
                     val = val.strftime('%Y-%m-%d')
             elif map['field_type'] == 'datetime':
                 if val and (type(val) is not str or type(val) is not unicode):
