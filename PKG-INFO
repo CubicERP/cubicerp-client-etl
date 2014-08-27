@@ -1,6 +1,6 @@
 Metadata-Version: 1.0
 Name: openerp-client-etl
-Version: 1.1.0
+Version: 1.1.1
 Summary: OpenERP ETL Client allows to extract, transform and load data from any data source.
 Home-page: http://cubicerp.com
 Author: Cubic ERP
@@ -15,7 +15,7 @@ Description:
         
         To consult the source code repository, report bugs or ask questions, see the Public Branch of Cubic ERP:
         
-        http://launchpad.net/cubicerp-addons
+        https://github.com/CubicERP
         
         To hire support contract and profesional services contact to us at info@cubicerp.com
         

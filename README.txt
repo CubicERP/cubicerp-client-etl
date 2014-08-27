@@ -7,7 +7,7 @@ The OpenERP ETL Client Library is officially supported by Cubic ERP S.A.C.
 
 To consult the source code repository, report bugs or ask questions, see the Public Branch of Cubic ERP:
 
-http://launchpad.net/cubicerp-addons
+https://github.com/CubicERP
 
 To hire support contract and profesional services contact to us at info@cubicerp.com
 
