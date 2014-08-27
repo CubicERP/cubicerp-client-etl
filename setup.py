@@ -33,7 +33,7 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(name='openerp-client-etl',
-      version='1.1.0',
+      version='1.1.1',
       description='OpenERP ETL Client allows to extract, transform and load data from any data source.',
       author='Cubic ERP',
       author_email='info@cubicerp.com',
