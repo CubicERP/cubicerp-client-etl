@@ -1,7 +1,7 @@
 
 The OpenERP ETL Client Library is a Python library to extract transform and load dato from any data
-source to OpenERP Server in an user-friendly way. To use this library you need install etl community
-module on a OpenERP instance.
+source to Cubic ERP Server in an user-friendly way. To use this library you need install etl community
+module on a Cubic ERP or OpenERP instance.
         
 The OpenERP ETL Client Library is officially supported by Cubic ERP S.A.C.
 
@@ -34,9 +34,9 @@ Compatibility
 
 - 1.1
 
- - XML-RPC: OpenERP version 6.1 and superior
+ - XML-RPC: Cubic ERP version 9.0 and superior or OpenERP version 6.1 and superior
 
- - JSON-RPC: OpenERP version 8.0 (upcoming) and superior
+ - JSON-RPC: Cubic ERP version 9.0 and superior or OpenERP version 8.0 (upcoming) and superior
 
 
 Changelog
