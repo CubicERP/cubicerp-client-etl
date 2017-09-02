@@ -27,5 +27,5 @@
 #
 ##############################################################################
 
-from openerpetl import *
+from cubicerpetl import *
 from etl_cron import *

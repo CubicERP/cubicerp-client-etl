@@ -29,7 +29,7 @@
 
 import openerplib
 import sys
-from openerpetl import oer_etl
+from cubicerpetl import oer_etl
 
 def run(hostname,port,database,login,password,log_print=True):
     oer_local = openerplib.get_connection(hostname=hostname,

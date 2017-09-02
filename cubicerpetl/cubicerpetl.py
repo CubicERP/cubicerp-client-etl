@@ -304,4 +304,3 @@ class oer_etl(object):
             vals['traceback'] = ''.join(stack)
         if self.log_print: print to_print.encode('ascii','replace')
         return log_obj.create(vals)
-    
