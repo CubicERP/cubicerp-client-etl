@@ -1,4 +1,4 @@
-openerp-client-etl
-==================
+cubicerp-client-etl
+===================
 
-Python ETL client library to Cubic ERP, OpenERP and Odoo v8.0
+Python ETL client library to Cubic ERP Management Software
