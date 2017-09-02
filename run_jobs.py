@@ -29,4 +29,4 @@
 
 import openerpetl
 
-openerpetl.run(hostname='localhost',port=28069,database='test',login='admin',password='admin')
+cubicerpetl.run(hostname='localhost',port=28069,database='test',login='admin',password='admin')
