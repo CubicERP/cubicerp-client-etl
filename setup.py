@@ -33,7 +33,7 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(name='cubicerp-client-etl',
-      version='1.1.1',
+      version='1.0',
       description='CubicERP ETL Client allows to extract, transform and load data from any data source.',
       author='Cubic ERP',
       author_email='info@cubicerp.com',
@@ -41,9 +41,9 @@ setup(name='cubicerp-client-etl',
       packages=["cubicerpetl"],
       long_description=read("README.txt"),
       keywords="openerp library etl extract transform load odbc xml-rpc net-rpc xmlrpc python client",
-      license="BSD",
+      license="AGPLv3",
       classifiers=[
-          "License :: OSI Approved :: BSD License",
+          "License :: OSI Approved :: GNU Affero General Public License v3",
           "Programming Language :: Python",
           ],
      )
