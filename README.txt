@@ -12,7 +12,7 @@ https://github.com/CubicERP
 To hire support contract and profesional services contact to us at info@cubicerp.com
 
 CubicERP ETL Client Library Guide
---------------------------------
+---------------------------------
     
 First install the library: ::
 
