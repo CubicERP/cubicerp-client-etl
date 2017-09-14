@@ -27,16 +27,14 @@
 # 
 ##############################################################################
 
-import pyodbc
 import openerplib
-import psycopg2
 import logging
 import decimal
 import time
 import sys, traceback
 _logger = logging.getLogger(__name__)
 
-class oer_etl(object):
+class cbc_etl(object):
     
     local = None
     __jobs = {}
@@ -46,8 +44,8 @@ class oer_etl(object):
     __resolve_xml_id = {}
     log_print = False
     
-    def __init__(self, oer_local, log_print=False):
-        self.local = oer_local
+    def __init__(self, cbc_local, log_print=False):
+        self.local = cbc_local
         self.__jobs = {}
         self.__servers = {}
         self.__connections = {}
@@ -107,15 +105,17 @@ class oer_etl(object):
                                              login=server['login'], password=server['password'])
                 self.__connections[server_id] = conn
         elif server['type'] == 'odbc':
+            import pyodbc
             conn = pyodbc.connect(server['str_connection'])
         elif server['type'] == 'postgresql':
+            import psycopg2
             conn = psycopg2.connect(server['str_connection'])
         _logger.debug('Server Connection %s',conn)
         return conn
     
     def get_rows(self, job_id, localdict={}):
         job = self.get_job(job_id)
-        conn = self.get_connection(job['src_server_id'][0])
+        conn = self.get_connection(job['extract_server_id'][0])
         cr = conn.cursor()
         if job['query_begin']:
             query_begin = job['query_begin']%localdict
@@ -164,7 +164,7 @@ class oer_etl(object):
         mod_xml = xml_id.split('.')
         if len(mod_xml) == 2:
             if not self.__resolve_xml_id.has_key(xml_id):
-                model_data_obj = self.get_connection(job['dst_server_id'][0]).get_model('etl.mapping')
+                model_data_obj = self.get_connection(job['load_server_id'][0]).get_model('etl.mapping')
                 self.__resolve_xml_id[xml_id] = model_data_obj.get_object_reference(mod_xml[0],mod_xml[1])[1]
                 if not self.__resolve_xml_id[xml_id]:
                     self.log(job_id,'The XML_ID: %s not found on destinity server'%xml_id, level='warning')
@@ -219,7 +219,7 @@ class oer_etl(object):
             elif map['search_null'] and (not val):
                 pass
             elif map['field_type'] == 'many2one':
-                val_obj = self.get_connection(job['dst_server_id'][0]).get_model(map['field_relation'])
+                val_obj = self.get_connection(job['load_server_id'][0]).get_model(map['field_relation'])
                 if map['name_search']:
                     val_ids = val_obj.search(eval(map['name_search'],row))
                 else:
@@ -257,13 +257,13 @@ class oer_etl(object):
         if rows:
             value = self.create(job_id, self.get_values(job_id, rows[0]), pk=rows[0].get('pk',False))
         else:
-            self.log(job_id, "%s Not Found on source server %s"%(value,self.get_job(job_id)['src_server_id']), level='error')
+            self.log(job_id, "%s Not Found on source server %s"%(value,self.get_job(job_id)['extract_server_id']), level='error')
         return value
     
     def create(self, job_id, values, pk=False):
         job = self.get_job(job_id)
-        oer = self.get_connection(job['dst_server_id'][0])
-        load_model = oer.get_model(job['load_model'])
+        cbc = self.get_connection(job['load_server_id'][0])
+        load_model = cbc.get_model(job['load_model'])
         if job['reprocess'] and pk:
             model_ids = []
             for log in self.get_logs(job_id,pk,level='info'):

@@ -29,7 +29,7 @@
 from distutils.core import setup
 
 setup(name='cubicerp-client-etl',
-      version='1.0.0',
+      version='1.0.1',
       description='CubicERP ETL Client allows to extract, transform and load data from any data source.',
       author='Cubic ERP',
       author_email='info@cubicerp.com',

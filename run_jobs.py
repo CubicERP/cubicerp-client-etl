@@ -27,6 +27,6 @@
 # 
 ##############################################################################
 
-import openerpetl
+import cubicerpetl
 
 cubicerpetl.run(hostname='localhost',port=28069,database='test',login='admin',password='admin')
