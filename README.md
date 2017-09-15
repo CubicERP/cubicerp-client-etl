@@ -28,7 +28,7 @@ Fill login information in config.ini file: ::
     username = admin
     password = admin
 
-Now you can run the ready jobs defined on OpenERP using the following script: ::
+Now you can run the ready jobs defined on Cubic ERP using the following script: ::
 
     import cubicerpetl
 
