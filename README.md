@@ -20,11 +20,19 @@ First install the library: ::
 
     sudo easy_install cubicerp-client-etl
 
+Fill login information in config.ini file: ::
+
+    [test]
+    host = 127.0.0.1
+    port = 8069
+    username = admin
+    password = admin
+
 Now you can run the ready jobs defined on OpenERP using the following script: ::
 
     import cubicerpetl
 
-    cubicerpetl.run(hostname='localhost', port=8069, database='test', login='admin', password='admin')
+    cubicerpetl.run(database='test')
     # will print "Finish etl_cron" when finish the jobs execution
 
 This script will be used on a programed cron task execution or as comand line script in order to ensure
