@@ -4,16 +4,16 @@
 #
 # Copyright (C) 2014 Cubic ERP S.A.C (<http://cubicerp.com>).
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met: 
-# 
+# modification, are permitted provided that the following conditions are met:
+#
 # 1. Redistributions of source code must retain the above copyright notice, this
-# list of conditions and the following disclaimer. 
+# list of conditions and the following disclaimer.
 # 2. Redistributions in binary form must reproduce the above copyright notice,
 # this list of conditions and the following disclaimer in the documentation
-# and/or other materials provided with the distribution. 
-# 
+# and/or other materials provided with the distribution.
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 # ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 # WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -24,22 +24,23 @@
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-# 
+#
 ##############################################################################
 
-from cubicerpetl import cbc_etl
-import cbc_xmlrpc
+import openerplib
+from ConfigParser import SafeConfigParser
 
 
-def run(database, host=None, port=None, username=None, password=None, log_print=True):
-    cbc_local = cbc_xmlrpc.get_connection(hostname=host, port=port, database=database,
-                                          login=username, password=password)
-    etl = cbc_etl(cbc_local, log_print=log_print)
-    for job in etl.get_jobs():
-        if etl.get_job_state(job['id']) != 'ready':
-            continue
-        cbc_local.get_model('etl.job').action_start([job['id']])
-        for row in etl.get_rows(job['id']):
-            new_id = etl.create(job['id'], etl.get_values(job['id'],row), pk=row.get('pk',False))
-        cbc_local.get_model('etl.job').action_done([job['id']]) 
-    print "Finish etl_cron"
+def get_connection(database, hostname=None, port=None, login=None, password=None):
+    parser = SafeConfigParser()
+    parser.read('../config.ini')
+    if hostname is None:
+        hostname = parser.get(database, 'host')
+    if port is None:
+        port = parser.get(database, 'port')
+    if login is None:
+        login = parser.get(database, 'username')
+    if password is None:
+        password = parser.get(database, 'password')
+
+    return openerplib.get_connection(hostname=hostname, port=port, database=database, login=login, password=password)

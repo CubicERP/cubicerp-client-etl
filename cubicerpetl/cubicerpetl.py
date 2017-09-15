@@ -27,7 +27,7 @@
 # 
 ##############################################################################
 
-import openerplib
+import cbc_xmlrpc
 import logging
 import decimal
 import time
@@ -100,9 +100,9 @@ class cbc_etl(object):
             if self.__connections.has_key(server_id):
                 conn = self.__connections[server_id]
             else:
-                conn = openerplib.get_connection(hostname=server['host'],
-                                             port=server['port'], database=server['database'],
-                                             login=server['login'], password=server['password'])
+                conn = cbc_xmlrpc.get_connection(hostname=server['host'], port=server['port'],
+                                                 database=server['database'], login=server['login'],
+                                                 password=server['password'])
                 self.__connections[server_id] = conn
         elif server['type'] == 'odbc':
             import pyodbc

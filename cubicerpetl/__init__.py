@@ -29,3 +29,4 @@
 
 from cubicerpetl import *
 from etl_cron import *
+import cbc_xmlrpc
