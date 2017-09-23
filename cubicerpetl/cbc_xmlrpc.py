@@ -29,15 +29,17 @@
 
 import openerplib
 from ConfigParser import SafeConfigParser
+import os
 
 
 def get_connection(database, hostname=None, port=None, login=None, password=None):
     parser = SafeConfigParser()
-    parser.read('../config.ini')
+    filename = os.path.join(os.path.dirname(__file__), 'config.ini')
+    parser.read(filename)
     if hostname is None:
         hostname = parser.get(database, 'host')
     if port is None:
-        port = parser.get(database, 'port')
+        port = parser.getint(database, 'port')
     if login is None:
         login = parser.get(database, 'username')
     if password is None:
