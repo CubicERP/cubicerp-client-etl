@@ -27,9 +27,11 @@
 # 
 ##############################################################################
 
-from cubicerpetl import cbc_etl
-import cbc_xmlrpc
-
+from __future__ import unicode_literals
+from .cubicerpetl import cbc_etl
+from . import cbc_xmlrpc
+import logging
+_logger = logging.getLogger(__name__)
 
 def run(database, host=None, port=None, username=None, password=None, log_print=True):
     cbc_local = cbc_xmlrpc.get_connection(hostname=host, port=port, database=database,
@@ -42,4 +44,4 @@ def run(database, host=None, port=None, username=None, password=None, log_print=
         for row in etl.get_rows(job['id']):
             new_id = etl.create(job['id'], etl.get_values(job['id'],row), pk=row.get('pk',False))
         cbc_local.get_model('etl.job').action_done([job['id']]) 
-    print "Finish etl_cron"
+    _logger.info("Finish etl_cron") 

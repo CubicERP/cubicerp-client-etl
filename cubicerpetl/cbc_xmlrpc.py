@@ -27,10 +27,14 @@
 #
 ##############################################################################
 
+from __future__ import unicode_literals
 import openerplib
-from ConfigParser import SafeConfigParser
+import sys
+if sys.version > '3':
+    from configparser import SafeConfigParser
+else:
+    from ConfigParser import SafeConfigParser
 import os
-
 
 def get_connection(database, hostname=None, port=None, login=None, password=None):
     parser = SafeConfigParser()

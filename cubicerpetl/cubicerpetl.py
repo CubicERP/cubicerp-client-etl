@@ -27,6 +27,7 @@
 # 
 ##############################################################################
 
+from __future__ import unicode_literals
 import logging
 import decimal
 import time
@@ -35,7 +36,10 @@ import sys, traceback
 import importlib
 import os
 import csv
-from StringIO import StringIO
+if sys.version > '3':
+    from io import BytesIO as StringIO
+else:
+    from StringIO import StringIO
 import base64
 
 _logger = logging.getLogger(__name__)
@@ -630,7 +634,7 @@ class cbc_etl(object):
             exc_type, exc_value, exc_traceback = stack
             stack = traceback.format_exception(exc_type, exc_value, exc_traceback)
             vals['traceback'] = ''.join(stack)
-        if self.log_print: print to_print.encode('ascii','replace')
+        if self.log_print: _logger.info(to_print.encode('ascii','replace'))
         return log_obj.create(vals)
 
 

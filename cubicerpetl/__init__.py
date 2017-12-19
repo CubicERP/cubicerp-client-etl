@@ -27,6 +27,6 @@
 #
 ##############################################################################
 
-from cubicerpetl import *
-from etl_cron import *
-import cbc_xmlrpc
+from .cubicerpetl import *
+from .etl_cron import *
+from . import cbc_xmlrpc
