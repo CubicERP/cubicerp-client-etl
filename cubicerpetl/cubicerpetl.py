@@ -83,7 +83,7 @@ class cbc_etl(object):
         return res
     
     def get_job(self, job_id):
-        if self.__jobs.has_key(job_id):
+        if self.__jobs.get(job_id):
             res = self.__jobs[job_id]
         else:
             job_obj = self.local.get_model('etl.job')
@@ -96,7 +96,7 @@ class cbc_etl(object):
         return job_obj.read([job_id])[0]['state']
     
     def get_resource(self, resource_id):
-        if self.__resources.has_key(resource_id):
+        if self.__resources.get(resource_id):
             res = self.__resources[resource_id]
         else:
             resource_obj = self.local.get_model('etl.resource')
@@ -128,7 +128,7 @@ class cbc_etl(object):
         return res
 
     def get_transform(self, transform_id):
-        if self.__transforms.has_key(transform_id):
+        if self.__transforms.get(transform_id):
             res = self.__transforms[transform_id]
         else:
             transform_obj = self.local.get_model('etl.transform')
@@ -142,7 +142,7 @@ class cbc_etl(object):
         return res
 
     def get_server(self, server_id):
-        if self.__servers.has_key(server_id):
+        if self.__servers.get(server_id):
             res = self.__servers[server_id]
         else:
             server_obj = self.local.get_model('etl.server')
@@ -154,7 +154,7 @@ class cbc_etl(object):
         conn = False
         server = self.get_server(server_id)
         if server['etl_type'] == 'rpc':
-            if self.__connections.has_key(server_id):
+            if self.__connections.get(server_id):
                 conn = self.__connections[server_id]
             else:
                 lib = importlib.import_module(server.get('driver') or server['rpc_protocol'] or 'cbc_xmlrpc')
@@ -268,14 +268,24 @@ class cbc_etl(object):
         res = []
         for r in rows:
             d = default_value.copy()
-            for x,y in r.iteritems():
-                if y is None:
-                    y = False
-                if type(y) is decimal.Decimal:
-                    y = float(y)
-                elif type(y) is str and query_encoding:
-                    y = y.decode(query_encoding)
-                d[x] = y
+            if sys.version > '3':
+                for x,y in r.items():
+                    if y is None:
+                        y = False
+                    if type(y) is decimal.Decimal:
+                        y = float(y)
+                    elif type(y) is str and query_encoding:
+                        y = y.decode(query_encoding)
+                    d[x] = y
+            else:
+                for x,y in r.iteritems():
+                    if y is None:
+                        y = False
+                    if type(y) is decimal.Decimal:
+                        y = float(y)
+                    elif type(y) is str and query_encoding:
+                        y = y.decode(query_encoding)
+                    d[x] = y
             res.append(d)
         return res
 
@@ -399,7 +409,7 @@ class cbc_etl(object):
                     val = {}
                     for col in cols:
                         val[col] = row.get(col)
-                    if val.has_key('id'):
+                    if val.get('id'):
                         del val['id']
                     vals .append(val)
                     self.create(job_id, val, pk=row.get('pk',False))
@@ -409,7 +419,7 @@ class cbc_etl(object):
                     for col in cols:
                         val[col] = row.get(col)
                     val_id = row['id']
-                    if val.has_key('id'):
+                    if val.get('id'):
                         del val['id']
                     self.write(job_id, val_id, val, pk=row.get('pk', False))
                     val['id'] = row['id']
@@ -419,7 +429,7 @@ class cbc_etl(object):
                     val = {}
                     for col in cols:
                         val[col] = row.get(col)
-                    if val.has_key('id'):
+                    if val.get('id'):
                         del val['id']
                     vals .append(val)
                     self.create(job_id, val, pk=row.get('pk',False))
@@ -451,7 +461,7 @@ class cbc_etl(object):
         mod_xml = xml_id.split('.')
         if len(mod_xml) == 2:
             key = "%s.%s" % (server_id, xml_id)
-            if not self.__resolve_xml_id.has_key(key):
+            if not self.__resolve_xml_id.get(key):
                 model_data_obj = (server_id and self.get_connection(server_id) or self.local).get_model('etl.mapping')
                 self.__resolve_xml_id[key] = model_data_obj.get_object_reference(mod_xml[0],mod_xml[1])[1]
                 if not self.__resolve_xml_id[key]:
@@ -471,7 +481,7 @@ class cbc_etl(object):
         return val
     
     def get_value_mapping(self, mapping_id, val):
-        if not self.__value_mapping.has_key(mapping_id):
+        if not self.__value_mapping.get(mapping_id):
             mapping_obj = self.local.get_model('etl.mapping')
             line_obj = self.local.get_model('etl.mapping.line')
             mapping = mapping_obj.read([mapping_id])[0]
@@ -491,7 +501,7 @@ class cbc_etl(object):
                 self.__value_mapping[mapping_id][line['name']] = line_value
         if not val and self.__value_mapping[mapping_id]['__return_null_value__']:
             return val
-        if self.__value_mapping[mapping_id].has_key('__is_default_value__') and not self.__value_mapping[mapping_id].has_key(val):
+        if self.__value_mapping[mapping_id].get('__is_default_value__') and not self.__value_mapping[mapping_id].get(val):
             val = self.__value_mapping[mapping_id].get('__is_default_value__')
         else:
             val = self.__value_mapping[mapping_id].get(val,val)
@@ -504,7 +514,7 @@ class cbc_etl(object):
             return row
         transform_id = job['transform_id'][0]
         transform = self.get_transform(transform_id)
-        if row.has_key('pk'):
+        if row.get('pk'):
             res['pk'] = row['pk']
         if job_id and row.get('pk') and transform['reprocess'] in ('noupdate', 'update', 'onlyupdate', 'delete'):
             model_ids = []
