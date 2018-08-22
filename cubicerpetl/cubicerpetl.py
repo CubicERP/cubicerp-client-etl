@@ -37,7 +37,7 @@ import importlib
 import os
 import csv
 if sys.version > '3':
-    from io import BytesIO as StringIO
+    from io import StringIO
 else:
     from StringIO import StringIO
 import base64
@@ -157,8 +157,8 @@ class cbc_etl(object):
             if self.__connections.get(server_id):
                 conn = self.__connections[server_id]
             else:
-                lib = importlib.import_module(server.get('driver') or server['rpc_protocol'] or 'cbc_xmlrpc')
-                conn = lib.get_connection(hostname=server['host'], port=server['port'], database=server['database'],
+                lib = importlib.import_module(server.get('driver') or server['rpc_protocol'] or 'cubicerpetl.cbc_xmlrpc')
+                conn = lib.get_connection(hostname=server['rpc_host'], port=server['rpc_port'], database=server['rpc_database'],
                                           login=server['login'], password=server['password'])
                 self.__connections[server_id] = conn
         elif server['etl_type'] == 'db':
@@ -225,8 +225,9 @@ class cbc_etl(object):
                     row.update(hf)
                     rows.append(row)
             elif resource['f_type'] == 'csv':
-                rows = csv.DictReader(fl,fieldnames=cols or None, delimiter=resource['txt_separator'] or ',',
+                reader = csv.DictReader(fl,fieldnames=cols or None, delimiter=resource['txt_separator'] or ',',
                                       quotechar=resource['txt_quote'] or '"')
+                rows = [r for r in reader]
             fl.close()
         elif resource['etl_type'] == 'db':
             cr = conn.cursor()
@@ -293,14 +294,19 @@ class cbc_etl(object):
         if not transform_id:
             return rows
         transform = self.get_transform(transform_id)
+        job = self.get_job(job_id)
+        server_id = job['load_server_id'] and job['load_server_id'][0] or False
+        conn2 = server_id and self.get_connection(server_id) or self.local
+        server_id = job['extract_server_id'] and job['extract_server_id'][0] or False
+        conn1 = server_id and self.get_connection(server_id) or self.local
         ress = []
         for row in rows:
             res = {}
             if transform['prev_python']:
-                exec(transform['prev_python_code'], {'row': row, 'rows': rows, 'res': res})
+                exec(transform['prev_python_code'], {'row': row, 'rows': rows, 'res': res, 'conn1': conn1, 'conn2': conn2})
             res.update(self.get_values(job_id, row))
             if transform['post_python']:
-                exec (transform['post_python_code'], {'row': row, 'rows': rows, 'res': res})
+                exec (transform['post_python_code'], {'row': row, 'rows': rows, 'res': res, 'conn1': conn1, 'conn2': conn2})
             if res:
                 ress.append(res)
         return ress
@@ -344,14 +350,14 @@ class cbc_etl(object):
                 if server['etl_type'] == 'fs':
                     fl = conn.open(resource['f_filename'], "w")
                     for val in vals:
-                        fl.write(('%s\r\n' % val).encode(query_encoding or 'utf-8'))
+                        fl.write(query_encoding and ('%s\r\n' % val).encode(query_encoding) or '%s\r\n' % val)
                     fl.close()
             elif resource['f_type'] == 'csv':
                 cols = [col['field_name'] or col['name'] for col in resource['f_columns']]
                 for row in rows:
                     val = {}
-                    for col in cols:
-                        val[col] = row.get(col)
+                    for col in resource['f_columns']:
+                        val[col['field_name'] or col['name']] = col['forced_value'] or row.get(col['field_name'] or col['name'], '')
                     vals.append(val)
                 buf = StringIO()
                 writer = csv.DictWriter(buf, cols, delimiter=resource['txt_separator'] or ',', quotechar=resource['txt_quote'] or '"')
@@ -359,7 +365,7 @@ class cbc_etl(object):
                     writer.writeheader()
                 writer.writerows(vals)
                 if server['etl_type'] == 'fs' and cols:
-                    fl = conn.open(resource['f_filename'], "wb")
+                    fl = conn.open(resource['f_filename'], "w")
                     fl.write(buf.getvalue())
                     fl.close()
                 buf.seek(0)
@@ -445,11 +451,11 @@ class cbc_etl(object):
                 line += "%*s" % (col['txt_position'] - pos, '')
                 val = col['forced_value'] or row.get(col['field_name'] or col['name'], '')
                 if col['txt_align'] == 'rjust':
-                    line += val[col['txt_lenght'] * -1:].rjust(col['txt_lenght'], col['txt_fill_char'] or ' ')
+                    line += str(val)[col['txt_lenght'] * -1:].rjust(col['txt_lenght'], col['txt_fill_char'] or ' ')
                 elif col['txt_align'] == 'center':
-                    line += val[:col['txt_lenght']].center(col['txt_lenght'], col['txt_fill_char'] or ' ')
+                    line += str(val)[:col['txt_lenght']].center(col['txt_lenght'], col['txt_fill_char'] or ' ')
                 else:
-                    line += val[:col['txt_lenght']].ljust(col['txt_lenght'], col['txt_fill_char'] or ' ')
+                    line += str(val)[:col['txt_lenght']].ljust(col['txt_lenght'], col['txt_fill_char'] or ' ')
                 pos += (col['txt_lenght'] + col['txt_position'] - pos)
             lines.append(line)
         return lines
@@ -535,13 +541,13 @@ class cbc_etl(object):
                 val = self.get_value_mapping(map['mapping_id'][0],val)
             row['__value_mapping__'] = val
             if map['field_type'] in ('char','text','selection'):
-                if val and type(val) is not unicode and transform['encoding']:
+                if val and type(val) is not str and transform['encoding']:
                     val = val.decode(transform['encoding'])
             elif map['field_type'] == 'date':
-                if val and type(val) not in (str, unicode):
+                if val and type(val) is not str:
                     val = val.strftime('%Y-%m-%d')
             elif map['field_type'] == 'datetime':
-                if val and (type(val) is not str or type(val) is not unicode):
+                if val and type(val) is not str:
                     val = val.strftime('%Y-%m-%d %H:%M:%S')
             elif map['search_null'] and (not val):
                 pass
