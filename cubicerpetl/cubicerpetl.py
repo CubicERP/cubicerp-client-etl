@@ -305,7 +305,7 @@ class cbc_etl(object):
                 ress.append(res)
         return ress
 
-    def do_load(self, rows, job_id):
+    def do_load(self, rows, job_id, context={}):
         job = self.get_job(job_id)
         resource_id = job['load_resource_id'][0]
         server_id = job['load_server_id'] and job['load_server_id'][0] or False
@@ -396,8 +396,12 @@ class cbc_etl(object):
 
         elif resource['etl_type'] == 'rpc':
             if resource['rpc_python']:
+                localdict =  {'rows':rows, 'conn': conn, 'context': context}
                 for row in rows:
-                    exec(resource['rpc_python_code'], {'row': row, 'rows':rows, 'conn': conn})
+                    localdict['row'] = row
+                    exec(resource['rpc_python_code'], localdict)
+                    if localdict.get('break_on', False):
+                        break
                 return rows
             model = conn.get_model(resource['rpc_model_name'])
             transform = transform_id and self.get_transform(transform_id) or {'reprocess': 'insert'}
