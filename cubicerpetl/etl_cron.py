@@ -27,7 +27,6 @@
 # 
 ##############################################################################
 
-from __future__ import unicode_literals
 from .cubicerpetl import cbc_etl
 from . import cbc_xmlrpc
 import logging

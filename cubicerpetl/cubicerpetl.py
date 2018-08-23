@@ -27,7 +27,6 @@
 # 
 ##############################################################################
 
-from __future__ import unicode_literals
 import logging
 import decimal
 import time
@@ -233,23 +232,23 @@ class cbc_etl(object):
             cr = conn.cursor()
             if resource['query_begin']:
                 query_begin = resource['query_begin'] % localdict
-                if type(query_begin) is unicode and query_encoding:
-                    query_begin = query_begin.encode(query_encoding)
+                # if type(query_begin) is unicode and query_encoding:
+                #     query_begin = query_begin.encode(query_encoding)
                 cr.execute(query_begin)
                 if resource.get('query_begin_delay'):
                     self.log('Query Begin is executing, time to waiting %d sec. (%s)' % (
                         resource['query_begin_delay'], time.strftime('%Y-%m-%d %H:%M.%S')), server_id=server_id, resource_id=resource_id)
                     time.sleep(resource['query_begin_delay'])
             query = resource['query'] % localdict
-            if type(query) is unicode and query_encoding:
-                query = query.encode(query_encoding)
+            # if type(query) is unicode and query_encoding:
+            #     query = query.encode(query_encoding)
             cr.execute(query)
             rows = cr.fetchall()
             row_description = cr.description
             if resource['query_end']:
                 query_end = resource['query_end'] % localdict
-                if type(query_end) is unicode and query_encoding:
-                    query_end = query_end.encode(query_encoding)
+                # if type(query_end) is unicode and query_encoding:
+                #     query_end = query_end.encode(query_encoding)
                 cr.execute(query_end)
             rows = [dict([(type(col) is tuple and col[0] or col.name, r[i]) for i, col in enumerate(row_description)])
                     for r in rows]
@@ -327,7 +326,7 @@ class cbc_etl(object):
             for row in rows:
                 for field in r_fields:
                     val = row.get(field, False)
-                    if not (type(val) is str or type(val) is unicode):
+                    if not (type(val) is str):
                         continue
                     if re.match(r'^[a-zA-Z_]+.[a-zA-Z_]+$', val):
                         val = self.get_resolve_xml_id(val, server_id=server_id)
@@ -377,8 +376,8 @@ class cbc_etl(object):
             for row in rows:
                 if resource['query_begin']:
                     query_begin = resource['query_begin'] % row
-                    if type(query_begin) is unicode and query_encoding:
-                        query_begin = query_begin.encode(query_encoding)
+                    # if type(query_begin) is unicode and query_encoding:
+                    #     query_begin = query_begin.encode(query_encoding)
                     cr.execute(query_begin)
                     if resource.get('query_begin_delay'):
                         self.log('Query Begin is executing, time to waiting %d sec. (%s)' % (
@@ -386,15 +385,15 @@ class cbc_etl(object):
                                  resource_id=resource_id)
                         time.sleep(resource['query_begin_delay'])
                 query = resource['query'] % row
-                if type(query) is unicode and query_encoding:
-                    query = query.encode(query_encoding)
+                # if type(query) is unicode and query_encoding:
+                #     query = query.encode(query_encoding)
                 cr.execute(query)
                 val = cr.fetchall()
                 row_description = cr.description
                 if resource['query_end']:
                     query_end = resource['query_end'] % row
-                    if type(query_end) is unicode and query_encoding:
-                        query_end = query_end.encode(query_encoding)
+                    # if type(query_end) is unicode and query_encoding:
+                    #     query_end = query_end.encode(query_encoding)
                     cr.execute(query_end)
                 vals += [dict([(type(col) is tuple and col[0] or col.name, r[i]) for i, col in enumerate(row_description)]) for r in val]
             cr.close()
@@ -466,7 +465,7 @@ class cbc_etl(object):
     
     def get_resolve_xml_id(self, xml_id, server_id=False):
         res = False
-        if type(xml_id) is not str and type(xml_id) is not unicode:
+        if type(xml_id) is not str:
             return res
         mod_xml = xml_id.split('.')
         if len(mod_xml) == 2:

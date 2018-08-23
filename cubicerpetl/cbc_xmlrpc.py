@@ -27,7 +27,6 @@
 #
 ##############################################################################
 
-from __future__ import unicode_literals
 import openerplib
 import sys
 if sys.version > '3':
