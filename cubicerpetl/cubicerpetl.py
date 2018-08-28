@@ -457,6 +457,8 @@ class cbc_etl(object):
                         del val['id']
                     vals .append(val)
                     self.create(job_id, val, pk=row.get('pk',False))
+        if transform_id and rows:
+            transform = self.get_transform(transform_id)
             if transform.get('end_python'):
                 server_id1 = job['extract_server_id'] and job['extract_server_id'][0] or False
                 conn1 = server_id1 and self.get_connection(server_id1) or self.local
