@@ -657,12 +657,12 @@ class cbc_etl(object):
             res = []
             for t in to_log:
                 res = self.log(t.get('msg', '-'), job_id=job_id, server_id=server_id, resource_id=resource_id,
-                         level=t.get('level', 'info'), id=t.get('model_id', t.get('id')), pk=t.get('pk'),
-                         model=t.get('model'), log=t.get('log'), check=t.get('check'))
+                         level=t.get('level', 'info'), id=t.get('model_id', t.get('id')), pk=t.get('pk', False),
+                         model=t.get('model', False), log=t.get('log', False), check=t.get('check', False))
         elif to_log and type(to_log) is dict:
             res = self.log(to_log.get('msg', '-'), job_id=job_id, server_id=server_id, resource_id=resource_id,
-                     level=to_log.get('level', 'info'), id=to_log.get('model_id', to_log.get('id')), pk=to_log.get('pk'),
-                     model=to_log.get('model'), log=to_log.get('log'), check=to_log.get('check'))
+                     level=to_log.get('level', 'info'), id=to_log.get('model_id', to_log.get('id')), pk=to_log.get('pk', False),
+                     model=to_log.get('model', False), log=to_log.get('log', False), check=to_log.get('check', False))
 
         return res
 
