@@ -656,9 +656,9 @@ class cbc_etl(object):
         if to_log and type(to_log) is not dict:
             res = []
             for t in to_log:
-                res+= [self.log(t.get('log', t.get('msg')), job_id=job_id, server_id=server_id, resource_id=resource_id,
+                res = self.log(t.get('log', t.get('msg')), job_id=job_id, server_id=server_id, resource_id=resource_id,
                          level=t.get('level', 'info'), id=t.get('model_id', t.get('id')), pk=t.get('pk'),
-                         model=t.get('model'))]
+                         model=t.get('model'))
         elif to_log and type(to_log) is dict:
             res = self.log(to_log.get('log', to_log.get('msg')), job_id=job_id, server_id=server_id, resource_id=resource_id,
                      level=to_log.get('level', 'info'), id=to_log.get('model_id', to_log.get('id')), pk=to_log.get('pk'),
