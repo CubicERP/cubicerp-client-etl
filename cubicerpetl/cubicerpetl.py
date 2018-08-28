@@ -173,7 +173,7 @@ class cbc_etl(object):
         _logger.debug('Server Connection %s',conn)
         return conn
     
-    def do_extract(self, resource_id, server_id=None, job_id=None, localdict={}):
+    def do_extract(self, resource_id, server_id=None, job_id=None, localdict={}, context={}):
         if job_id:
             job = self.get_job(job_id)
             if not server_id:
@@ -256,7 +256,10 @@ class cbc_etl(object):
             conn.close()
         elif resource['etl_type'] == 'rpc':
             if resource['rpc_python']:
-                rows = []
+                localdict = {'rows': [], 'conn': conn, 'context': context}
+                exec(resource['rpc_python_code'], localdict)
+                self.to_log(localdict.get('to_log'))
+                rows = localdict.get('rows', [])
             else:
                 model_obj = self.local.get_model(resource['rpc_model_name'])
                 model_ids = model_obj.search(eval(resource['rpc_domain']))
@@ -301,11 +304,22 @@ class cbc_etl(object):
         ress = []
         for row in rows:
             res = {}
+            localdict = {'row': row, 'rows': rows, 'res': res, 'conn1': conn1, 'conn2': conn2}
             if transform['prev_python']:
-                exec(transform['prev_python_code'], {'row': row, 'rows': rows, 'res': res, 'conn1': conn1, 'conn2': conn2})
+                exec(transform['prev_python_code'], localdict)
+                self.to_log(localdict.get('to_log'))
+                if localdict.get('break_on', False):
+                    break
+                if localdict.get('continue_on', False):
+                    continue
             res.update(self.get_values(job_id, row))
             if transform['post_python']:
-                exec (transform['post_python_code'], {'row': row, 'rows': rows, 'res': res, 'conn1': conn1, 'conn2': conn2})
+                exec (transform['post_python_code'], localdict)
+                self.to_log(localdict.get('to_log'))
+                if localdict.get('break_on', False):
+                    break
+                if localdict.get('continue_on', False):
+                    continue
             if res:
                 ress.append(res)
         return ress
@@ -405,6 +419,7 @@ class cbc_etl(object):
                 for row in rows:
                     localdict['row'] = row
                     exec(resource['rpc_python_code'], localdict)
+                    self.to_log(localdict.get('to_log'))
                     if localdict.get('break_on', False):
                         break
                 return rows
@@ -442,6 +457,12 @@ class cbc_etl(object):
                         del val['id']
                     vals .append(val)
                     self.create(job_id, val, pk=row.get('pk',False))
+            if transform.get('end_python'):
+                server_id1 = job['extract_server_id'] and job['extract_server_id'][0] or False
+                conn1 = server_id1 and self.get_connection(server_id1) or self.local
+                localdict = {'rows': rows, 'conn1': conn1, 'conn2': conn}
+                exec(transform['end_python_code'], localdict)
+                self.to_log(localdict.get('to_log'))
         return vals
 
     def get_txt_lines(self, rows, resource_id):
@@ -627,7 +648,15 @@ class cbc_etl(object):
         else:
             self.log('Ok', job_id=job['id'], server_id=server_id, resource_id=resource_id, id=new_id, pk=pk, model=model_name)
         return new_id
-    
+
+    def to_log(self,job_id, server_id, resource_id, to_log):
+        res = False
+        if to_log:
+            res = self.log(to_log.get('log', to_log.get('msg')), job_id=job_id, server_id=server_id, resource_id=resource_id,
+                     level=to_log.get('level', 'info'), id=to_log.get('model_id', to_log.get('id')), pk=to_log.get('pk'),
+                     model=to_log.get('model'))
+        return res
+
     def log(self, msg, job_id=None, server_id=None, resource_id=None, level=None, id=None, pk=None, stack=None, model=None):
         msg = msg.replace('\\\\n','\\n')
         if self.log_print: to_print = "Job: %s - Message:%s"%(job_id,msg.replace('\\\\n','\\n'))
