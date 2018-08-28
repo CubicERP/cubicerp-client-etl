@@ -666,7 +666,7 @@ class cbc_etl(object):
 
         return res
 
-    def log(self, msg, job_id=None, server_id=None, resource_id=None, level=None, id=None, pk=None, stack=None, model=None, log='', check=False):
+    def log(self, msg, job_id=None, server_id=None, resource_id=None, level=None, id=None, pk=None, stack=None, model=None, log=None, check=False):
         msg = msg.replace('\\\\n','\\n')
         if self.log_print: to_print = "Job: %s - Message:%s"%(job_id,msg.replace('\\\\n','\\n'))
         log_obj = self.local.get_model('etl.log')
