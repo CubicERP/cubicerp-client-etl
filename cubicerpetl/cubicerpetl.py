@@ -670,7 +670,7 @@ class cbc_etl(object):
         msg = msg.replace('\\\\n','\\n')
         if self.log_print: to_print = "Job: %s - Message:%s"%(job_id,msg.replace('\\\\n','\\n'))
         log_obj = self.local.get_model('etl.log')
-        vals = {'message': msg, 'log': log,'check': check}
+        vals = {'message': msg, 'check': check}
         if job_id:
             vals['job_id'] = job_id
         if server_id:
@@ -681,6 +681,8 @@ class cbc_etl(object):
             vals['model'] = model
         if level:
             vals['level'] =  level
+        if log:
+            vals['log'] = log
         if id:
             vals['model_id'] = id
             if self.log_print: to_print += " - ID:%s"%id
