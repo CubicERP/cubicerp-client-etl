@@ -258,7 +258,7 @@ class cbc_etl(object):
             if resource['rpc_python']:
                 localdict = {'rows': [], 'conn': conn, 'context': context}
                 exec(resource['rpc_python_code'], localdict)
-                self.to_log(localdict.get('to_log'))
+                self.to_log(job_id, server_id, resource_id, localdict.get('to_log'))
                 rows = localdict.get('rows', [])
             else:
                 model_obj = self.local.get_model(resource['rpc_model_name'])
@@ -307,7 +307,7 @@ class cbc_etl(object):
             localdict = {'row': row, 'rows': rows, 'res': res, 'conn1': conn1, 'conn2': conn2}
             if transform['prev_python']:
                 exec(transform['prev_python_code'], localdict)
-                self.to_log(localdict.get('to_log'))
+                self.to_log(job_id, server_id, None, localdict.get('to_log'))
                 if localdict.get('break_on', False):
                     break
                 if localdict.get('continue_on', False):
@@ -315,7 +315,7 @@ class cbc_etl(object):
             res.update(self.get_values(job_id, row))
             if transform['post_python']:
                 exec (transform['post_python_code'], localdict)
-                self.to_log(localdict.get('to_log'))
+                self.to_log(job_id, server_id, None, localdict.get('to_log'))
                 if localdict.get('break_on', False):
                     break
                 if localdict.get('continue_on', False):
@@ -419,7 +419,7 @@ class cbc_etl(object):
                 for row in rows:
                     localdict['row'] = row
                     exec(resource['rpc_python_code'], localdict)
-                    self.to_log(localdict.get('to_log'))
+                    self.to_log(job_id, server_id, resource_id, localdict.get('to_log'))
                     if localdict.get('break_on', False):
                         break
                 return rows
@@ -464,7 +464,7 @@ class cbc_etl(object):
                 conn1 = server_id1 and self.get_connection(server_id1) or self.local
                 localdict = {'rows': rows, 'conn1': conn1, 'conn2': conn}
                 exec(transform['end_python_code'], localdict)
-                self.to_log(localdict.get('to_log'))
+                self.to_log(job_id, server_id, resource_id, localdict.get('to_log'))
         return vals
 
     def get_txt_lines(self, rows, resource_id):
