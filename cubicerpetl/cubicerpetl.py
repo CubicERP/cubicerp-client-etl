@@ -307,7 +307,7 @@ class cbc_etl(object):
             localdict = {'row': row, 'rows': rows, 'res': res, 'conn1': conn1, 'conn2': conn2}
             if transform['prev_python']:
                 exec(transform['prev_python_code'], localdict)
-                self.to_log(job_id, server_id, None, localdict.get('to_log'))
+                self.to_log(job_id, server_id, False, localdict.get('to_log'))
                 if localdict.get('break_on', False):
                     break
                 if localdict.get('continue_on', False):
@@ -315,7 +315,7 @@ class cbc_etl(object):
             res.update(self.get_values(job_id, row))
             if transform['post_python']:
                 exec (transform['post_python_code'], localdict)
-                self.to_log(job_id, server_id, None, localdict.get('to_log'))
+                self.to_log(job_id, server_id, False, localdict.get('to_log'))
                 if localdict.get('break_on', False):
                     break
                 if localdict.get('continue_on', False):
@@ -660,13 +660,13 @@ class cbc_etl(object):
                          level=t.get('level', 'info'), id=t.get('model_id', t.get('id')), pk=t.get('pk'),
                          model=t.get('model'), log=t.get('log'), check=t.get('check'))
         elif to_log and type(to_log) is dict:
-            res = self.log(to_log.get('log', to_log.get('msg')), job_id=job_id, server_id=server_id, resource_id=resource_id,
+            res = self.log(to_log.get('msg', '-'), job_id=job_id, server_id=server_id, resource_id=resource_id,
                      level=to_log.get('level', 'info'), id=to_log.get('model_id', to_log.get('id')), pk=to_log.get('pk'),
                      model=to_log.get('model'), log=to_log.get('log'), check=to_log.get('check'))
 
         return res
 
-    def log(self, msg, job_id=None, server_id=None, resource_id=None, level=None, id=None, pk=None, stack=None, model=None, log='-', check=False):
+    def log(self, msg, job_id=None, server_id=None, resource_id=None, level=None, id=None, pk=None, stack=None, model=None, log=None, check=False):
         msg = msg.replace('\\\\n','\\n')
         if self.log_print: to_print = "Job: %s - Message:%s"%(job_id,msg.replace('\\\\n','\\n'))
         log_obj = self.local.get_model('etl.log')
