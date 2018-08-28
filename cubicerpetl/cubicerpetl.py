@@ -653,10 +653,17 @@ class cbc_etl(object):
 
     def to_log(self,job_id, server_id, resource_id, to_log):
         res = False
-        if to_log:
+        if to_log and type(to_log) is not dict:
+            res = []
+            for t in to_log:
+                res+= [self.log(to_log.get('log', to_log.get('msg')), job_id=job_id, server_id=server_id, resource_id=resource_id,
+                         level=to_log.get('level', 'info'), id=to_log.get('model_id', to_log.get('id')), pk=to_log.get('pk'),
+                         model=to_log.get('model'))]
+        elif to_log and type(to_log) is dict:
             res = self.log(to_log.get('log', to_log.get('msg')), job_id=job_id, server_id=server_id, resource_id=resource_id,
                      level=to_log.get('level', 'info'), id=to_log.get('model_id', to_log.get('id')), pk=to_log.get('pk'),
                      model=to_log.get('model'))
+
         return res
 
     def log(self, msg, job_id=None, server_id=None, resource_id=None, level=None, id=None, pk=None, stack=None, model=None):
