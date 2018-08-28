@@ -662,7 +662,7 @@ class cbc_etl(object):
         elif to_log and type(to_log) is dict:
             res = self.log(to_log.get('log', to_log.get('msg')), job_id=job_id, server_id=server_id, resource_id=resource_id,
                      level=to_log.get('level', 'info'), id=to_log.get('model_id', to_log.get('id')), pk=to_log.get('pk'),
-                     model=to_log.get('model'), log=t.get('log'), check=t.get('check'))
+                     model=to_log.get('model'), log=to_log.get('log'), check=to_log.get('check'))
 
         return res
 
