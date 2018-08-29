@@ -268,7 +268,7 @@ class cbc_etl(object):
                 rows = localdict.get('rows', [])
             else:
                 model_obj = self.local.get_model(resource['rpc_model_name'])
-                model_ids = model_obj.search(eval(resource['rpc_domain'], locals=localdict))
+                model_ids = model_obj.search(eval(resource['rpc_domain'], localdict))
                 rows = model_obj.read(model_ids,[r['field_name'] for r in resource['rpc_fields']])
 
         default_value = {}
