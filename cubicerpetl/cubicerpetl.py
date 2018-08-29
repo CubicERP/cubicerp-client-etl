@@ -261,7 +261,7 @@ class cbc_etl(object):
             cr.close()
             conn.close()
         elif resource['etl_type'] == 'rpc':
-            localdict = {'conn': conn, 'context': context, 'job': job}
+            localdict = {'conn': conn, 'context': context, 'job': job_id and job or {}, }
             if resource['rpc_python']:
                 exec(resource['rpc_python_code'], localdict)
                 self.to_log(job_id, server_id, resource_id, localdict.get('to_log'))
