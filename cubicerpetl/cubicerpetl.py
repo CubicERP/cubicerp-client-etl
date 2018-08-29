@@ -658,19 +658,19 @@ class cbc_etl(object):
             for t in to_log:
                 res = self.log(t.get('msg', '-'), job_id=job_id, server_id=server_id, resource_id=resource_id,
                          level=t.get('level', 'info'), id=t.get('model_id', t.get('id')), pk=t.get('pk', False),
-                         model=t.get('model', False), log=t.get('log', False), check=t.get('check', False))
+                         model=t.get('model', False), log=t.get('log', False), check=t.get('check', False), amount=t.get('amount',0.0))
         elif to_log and type(to_log) is dict:
             res = self.log(to_log.get('msg', '-'), job_id=job_id, server_id=server_id, resource_id=resource_id,
                      level=to_log.get('level', 'info'), id=to_log.get('model_id', to_log.get('id')), pk=to_log.get('pk', False),
-                     model=to_log.get('model', False), log=to_log.get('log', False), check=to_log.get('check', False))
+                     model=to_log.get('model', False), log=to_log.get('log', False), check=to_log.get('check', False), amount=to_log.get('amount',0.0))
 
         return res
 
-    def log(self, msg, job_id=None, server_id=None, resource_id=None, level=None, id=None, pk=None, stack=None, model=None, log=None, check=False):
+    def log(self, msg, job_id=None, server_id=None, resource_id=None, level=None, id=None, pk=None, stack=None, model=None, log=None, check=False, amount=0.0):
         msg = msg.replace('\\\\n','\\n')
         if self.log_print: to_print = "Job: %s - Message:%s"%(job_id,msg.replace('\\\\n','\\n'))
         log_obj = self.local.get_model('etl.log')
-        vals = {'message': msg, 'check': check}
+        vals = {'message': msg, 'check': check, 'amount': amount}
         if job_id:
             vals['job_id'] = job_id
         if server_id:
