@@ -261,14 +261,14 @@ class cbc_etl(object):
             cr.close()
             conn.close()
         elif resource['etl_type'] == 'rpc':
+            localdict = {'conn': conn, 'context': context, 'job': job}
             if resource['rpc_python']:
-                localdict = {'rows': [], 'conn': conn, 'context': context}
                 exec(resource['rpc_python_code'], localdict)
                 self.to_log(job_id, server_id, resource_id, localdict.get('to_log'))
                 rows = localdict.get('rows', [])
             else:
                 model_obj = self.local.get_model(resource['rpc_model_name'])
-                model_ids = model_obj.search(eval(resource['rpc_domain']))
+                model_ids = model_obj.search(eval(resource['rpc_domain'], locals=localdict))
                 rows = model_obj.read(model_ids,[r['field_name'] for r in resource['rpc_fields']])
 
         default_value = {}
@@ -310,7 +310,7 @@ class cbc_etl(object):
         ress = []
         for row in rows:
             res = {}
-            localdict = {'row': row, 'rows': rows, 'res': res, 'conn1': conn1, 'conn2': conn2}
+            localdict = {'row': row, 'rows': rows, 'res': res, 'conn1': conn1, 'conn2': conn2, 'job': job}
             if transform['prev_python']:
                 exec(transform['prev_python_code'], localdict)
                 self.to_log(job_id, server_id, False, localdict.get('to_log'))
@@ -421,7 +421,7 @@ class cbc_etl(object):
 
         elif resource['etl_type'] == 'rpc':
             if resource['rpc_python']:
-                localdict =  {'rows':rows, 'conn': conn, 'context': context}
+                localdict =  {'rows':rows, 'conn': conn, 'context': context, 'job': job}
                 for row in rows:
                     localdict['row'] = row
                     exec(resource['rpc_python_code'], localdict)
@@ -468,7 +468,7 @@ class cbc_etl(object):
             if transform.get('end_python'):
                 server_id1 = job['extract_server_id'] and job['extract_server_id'][0] or False
                 conn1 = server_id1 and self.get_connection(server_id1) or self.local
-                localdict = {'rows': rows, 'conn1': conn1, 'conn2': conn}
+                localdict = {'rows': rows, 'conn1': conn1, 'conn2': conn, 'job': job}
                 exec(transform['end_python_code'], localdict)
                 self.to_log(job_id, server_id, resource_id, localdict.get('to_log'))
         return vals
