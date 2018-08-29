@@ -185,10 +185,16 @@ class cbc_etl(object):
         rows = []
         if resource['etl_type'] == 'fs':
             fl = StringIO()
-            if server['etl_type'] == 'fs':
-                fl = conn.open(resource['f_filename'])
-            elif job_id and job['input_file']:
-                fl = StringIO(base64.b64decode(job['input_file']))
+            if server['type'] == 'online':
+                if job_id and job['input_file']:
+                    fl = StringIO(base64.b64decode(job['input_file']))
+                elif server['etl_type'] == 'fs':
+                    fl = conn.open(resource['f_filename'])
+            else:
+                if server['etl_type'] == 'fs':
+                    fl = conn.open(resource['f_filename'])
+                elif job_id and job['input_file']:
+                    fl = StringIO(base64.b64decode(job['input_file']))
 
             cols = [c['field_name'] or c['name'] for c in resource['f_columns']]
 
