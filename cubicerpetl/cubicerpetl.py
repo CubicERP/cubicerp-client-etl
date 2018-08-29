@@ -39,7 +39,6 @@ if sys.version > '3':
     from io import StringIO
 else:
     from StringIO import StringIO
-import base64
 
 _logger = logging.getLogger(__name__)
 
@@ -187,14 +186,14 @@ class cbc_etl(object):
             fl = StringIO()
             if job['type'] == 'online':
                 if job_id and job['input_file']:
-                    fl = StringIO(base64.b64decode(job['input_file']))
+                    fl = StringIO(job['input_file'])
                 elif server['etl_type'] == 'fs':
                     fl = conn.open(resource['f_filename'])
             else:
                 if server['etl_type'] == 'fs':
                     fl = conn.open(resource['f_filename'])
                 elif job_id and job['input_file']:
-                    fl = StringIO(base64.b64decode(job['input_file']))
+                    fl = StringIO(job['input_file'])
 
             cols = [c['field_name'] or c['name'] for c in resource['f_columns']]
 
