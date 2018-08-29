@@ -185,7 +185,7 @@ class cbc_etl(object):
         rows = []
         if resource['etl_type'] == 'fs':
             fl = StringIO()
-            if server['type'] == 'online':
+            if job['type'] == 'online':
                 if job_id and job['input_file']:
                     fl = StringIO(base64.b64decode(job['input_file']))
                 elif server['etl_type'] == 'fs':
