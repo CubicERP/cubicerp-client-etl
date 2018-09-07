@@ -361,10 +361,10 @@ class cbc_etl(object):
         if resource['etl_type'] == 'fs':
             if resource['f_type'] == 'txt':
                 if resource['f_header_id']:
-                    vals += self.get_txt_lines(rows, resource['f_header_id'][0])
+                    vals += self.get_txt_lines(rows and [rows[0]] or rows, resource['f_header_id'][0])
                 vals += self.get_txt_lines(rows, resource_id)
                 if resource['f_footer_id']:
-                    vals += self.get_txt_lines(rows, resource['f_footer_id'][0])
+                    vals += self.get_txt_lines(rows and [rows[-1]] or rows, resource['f_footer_id'][0])
 
                 if server['etl_type'] == 'fs':
                     fl = conn.open(resource['f_filename'], "w")
