@@ -236,26 +236,26 @@ class cbc_etl(object):
             fl.close()
         elif resource['etl_type'] == 'db':
             cr = conn.cursor()
-            if resource['query_begin']:
-                query_begin = resource['query_begin'] % localdict
-                # if type(query_begin) is unicode and query_encoding:
-                #     query_begin = query_begin.encode(query_encoding)
-                cr.execute(query_begin)
-                if resource.get('query_begin_delay'):
+            if resource['sql_begin']:
+                sql_begin = resource['sql_begin'] % localdict
+                # if type(sql_begin) is unicode and query_encoding:
+                #     sql_begin = sql_begin.encode(query_encoding)
+                cr.execute(sql_begin)
+                if resource.get('sql_begin_delay'):
                     self.log('Query Begin is executing, time to waiting %d sec. (%s)' % (
-                        resource['query_begin_delay'], time.strftime('%Y-%m-%d %H:%M.%S')), server_id=server_id, resource_id=resource_id)
-                    time.sleep(resource['query_begin_delay'])
-            query = resource['query'] % localdict
+                        resource['sql_begin_delay'], time.strftime('%Y-%m-%d %H:%M.%S')), server_id=server_id, resource_id=resource_id)
+                    time.sleep(resource['sql_begin_delay'])
+            query = resource['sql_query'] % localdict
             # if type(query) is unicode and query_encoding:
             #     query = query.encode(query_encoding)
             cr.execute(query)
             rows = cr.fetchall()
             row_description = cr.description
-            if resource['query_end']:
-                query_end = resource['query_end'] % localdict
-                # if type(query_end) is unicode and query_encoding:
-                #     query_end = query_end.encode(query_encoding)
-                cr.execute(query_end)
+            if resource['sql_end']:
+                sql_end = resource['sql_end'] % localdict
+                # if type(sql_end) is unicode and query_encoding:
+                #     sql_end = sql_end.encode(query_encoding)
+                cr.execute(sql_end)
             rows = [dict([(type(col) is tuple and col[0] or col.name, r[i]) for i, col in enumerate(row_description)])
                     for r in rows]
             cr.close()
@@ -394,27 +394,27 @@ class cbc_etl(object):
         elif resource['etl_type'] == 'db':
             cr = conn.cursor()
             for row in rows:
-                if resource['query_begin']:
-                    query_begin = resource['query_begin'] % row
-                    # if type(query_begin) is unicode and query_encoding:
-                    #     query_begin = query_begin.encode(query_encoding)
-                    cr.execute(query_begin)
-                    if resource.get('query_begin_delay'):
+                if resource['sql_begin']:
+                    sql_begin = resource['sql_begin'] % row
+                    # if type(sql_begin) is unicode and query_encoding:
+                    #     sql_begin = sql_begin.encode(query_encoding)
+                    cr.execute(sql_begin)
+                    if resource.get('sql_begin_delay'):
                         self.log('Query Begin is executing, time to waiting %d sec. (%s)' % (
-                            resource['query_begin_delay'], time.strftime('%Y-%m-%d %H:%M.%S')), server_id=server_id,
+                            resource['sql_begin_delay'], time.strftime('%Y-%m-%d %H:%M.%S')), server_id=server_id,
                                  resource_id=resource_id)
-                        time.sleep(resource['query_begin_delay'])
-                query = resource['query'] % row
+                        time.sleep(resource['sql_begin_delay'])
+                query = resource['sql_query'] % row
                 # if type(query) is unicode and query_encoding:
                 #     query = query.encode(query_encoding)
                 cr.execute(query)
                 val = cr.fetchall()
                 row_description = cr.description
-                if resource['query_end']:
-                    query_end = resource['query_end'] % row
-                    # if type(query_end) is unicode and query_encoding:
-                    #     query_end = query_end.encode(query_encoding)
-                    cr.execute(query_end)
+                if resource['sql_end']:
+                    sql_end = resource['sql_end'] % row
+                    # if type(sql_end) is unicode and query_encoding:
+                    #     sql_end = sql_end.encode(query_encoding)
+                    cr.execute(sql_end)
                 vals += [dict([(type(col) is tuple and col[0] or col.name, r[i]) for i, col in enumerate(row_description)]) for r in val]
             cr.close()
             conn.close()
