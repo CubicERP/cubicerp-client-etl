@@ -162,7 +162,7 @@ class cbc_etl(object):
                 self.__connections[server_id] = conn
         elif server['etl_type'] == 'db':
             lib = importlib.import_module(server.get('driver') or server['db_type'] or 'psycopg2')
-            conn = lib.connect(server.get('str_connection', "'dbname'=%s"%self.local.database))
+            conn = lib.connect(server.get('db_connection', "'dbname'=%s"%self.local.database))
         elif server['etl_type'] == 'fs':
             if server['fs_protocol'] == 'file':
                 lib = server.get('driver') and importlib.import_module(server['driver']) or cbc_file
