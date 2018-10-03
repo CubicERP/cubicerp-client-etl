@@ -189,10 +189,10 @@ class cbc_etl(object):
                 if job_id and job['input_file']:
                     fl = StringIO(base64.b64decode(job['input_file']).decode('utf-8'))
                 elif server['etl_type'] == 'fs':
-                    fl = conn.open(resource['f_filename'])
+                    fl = conn.open(job['file_name'] or resource['f_filename'])
             else:
                 if server['etl_type'] == 'fs':
-                    fl = conn.open(resource['f_filename'])
+                    fl = conn.open(job['file_name'] or resource['f_filename'])
                 elif job_id and job['input_file']:
                     fl = StringIO(base64.b64decode(job['input_file']).decode('utf-8'))
 
@@ -367,7 +367,7 @@ class cbc_etl(object):
                     vals += self.get_txt_lines(rows and [rows[-1]] or rows, resource['f_footer_id'][0])
 
                 if server['etl_type'] == 'fs':
-                    fl = conn.open(resource['f_filename'], "w")
+                    fl = conn.open(job['file_name'] or resource['f_filename'], "w")
                     for val in vals:
                         fl.write(query_encoding and ('%s\r\n' % val).encode(query_encoding) or '%s\r\n' % val)
                     fl.close()
@@ -384,7 +384,7 @@ class cbc_etl(object):
                     writer.writeheader()
                 writer.writerows(vals)
                 if server['etl_type'] == 'fs' and cols:
-                    fl = conn.open(resource['f_filename'], "w")
+                    fl = conn.open(job['file_name'] or resource['f_filename'], "w")
                     fl.write(buf.getvalue())
                     fl.close()
                 buf.seek(0)
