@@ -372,24 +372,19 @@ class cbc_etl(object):
                         fl.write(query_encoding and ('%s\r\n' % val).encode(query_encoding) or '%s\r\n' % val)
                     fl.close()
             elif resource['f_type'] == 'csv':
+                if resource['f_header_id']:
+                    vals += self.get_csv_lines(rows and [rows[0]] or rows, resource['f_header_id'][0])
+                vals += self.get_csv_lines(rows, resource_id)
+                if resource['f_footer_id']:
+                    vals += self.get_csv_lines(rows and [rows[-1]] or rows, resource['f_footer_id'][0])
+
                 cols = [col['field_name'] or col['name'] for col in resource['f_columns']]
-                for row in rows:
-                    val = {}
-                    for col in resource['f_columns']:
-                        val[col['field_name'] or col['name']] = col['forced_value'] or row.get(col['field_name'] or col['name'], '')
-                    vals.append(val)
-                buf = StringIO()
-                writer = csv.DictWriter(buf, cols, delimiter=resource['txt_separator'] or ',', quotechar=resource['txt_quote'] or '"')
-                if resource['txt_header']:
-                    writer.writeheader()
-                writer.writerows(vals)
+
                 if server['etl_type'] == 'fs' and cols:
                     fl = conn.open(job['file_name'] or resource['f_filename'], "w")
-                    fl.write(buf.getvalue())
+                    for val in vals:
+                        fl.write(query_encoding and ('%s\r\n' % val).encode(query_encoding) or '%s\r\n' % val)
                     fl.close()
-                buf.seek(0)
-                vals = [b and b[:-2] or '' for b in buf.readlines()]
-                buf.close()
 
         elif resource['etl_type'] == 'db':
             cr = conn.cursor()
@@ -490,6 +485,27 @@ class cbc_etl(object):
                     line += str(val)[:col['txt_lenght']].ljust(col['txt_lenght'], col['txt_fill_char'] or ' ')
                 pos += (col['txt_lenght'] + col['txt_position'] - pos)
             lines.append(line)
+        return lines
+
+    def get_csv_lines(self, rows, resource_id):
+        lines = []
+        resource = self.get_resource(resource_id)
+
+        cols = [col['field_name'] or col['name'] for col in resource['f_columns']]
+        for row in rows:
+            val = {}
+            for col in resource['f_columns']:
+                val[col['field_name'] or col['name']] = col['forced_value'] or row.get(col['field_name'] or col['name'],
+                                                                                       '')
+            lines.append(val)
+        buf = StringIO()
+        writer = csv.DictWriter(buf, cols, delimiter=resource['txt_separator'] or ',', quotechar=resource['txt_quote'] or '"')
+        if resource['txt_header']:
+            writer.writeheader()
+        writer.writerows(lines)
+        buf.seek(0)
+        lines = [b and b[:-2] or '' for b in buf.readlines()]
+        buf.close()
         return lines
     
     def get_resolve_xml_id(self, xml_id, server_id=False):
