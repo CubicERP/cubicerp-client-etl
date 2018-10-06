@@ -685,7 +685,7 @@ class cbc_etl(object):
             new_id = load_model.create(values)
         except Exception as e:
             msg = '\n%s.create '%load_model.model_name + str(values)
-            msg += '\nUnexpected Error: \n%s\n\n%s'%(e.faultCode,e.faultString)
+            msg += '\nUnexpected Error: \n%s\n\n%s'%(type(e).__name__,str(e))
             self.log(msg, stack=sys.exc_info(), job_id=job['id'], level='error', pk=pk)
         else:
             self.log('Ok', job_id=job['id'], server_id=server_id, resource_id=resource_id, id=new_id, pk=pk, model=model_name)
