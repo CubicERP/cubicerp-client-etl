@@ -230,9 +230,27 @@ class cbc_etl(object):
                     row.update(hf)
                     rows.append(row)
             elif resource['f_type'] == 'csv':
-                reader = csv.DictReader(fl,fieldnames=cols or None, delimiter=resource['txt_separator'] or ',',
-                                      quotechar=resource['txt_quote'] or '"')
-                rows = [r for r in reader]
+                hf = {}
+                if header_cols:
+                    reader = csv.DictReader(fl, fieldnames=header_cols or None, delimiter=resource['txt_separator'] or ',', quotechar=resource['txt_quote'] or '"')
+                    for h in reader:
+                        hf.update(h)
+                        break
+                if footer_cols:
+                    reader = csv.DictReader(fl, fieldnames=footer_cols or None, delimiter=resource['txt_separator'] or ',', quotechar=resource['txt_quote'] or '"')
+                    footers = [r for r in reader]
+                    hf.update(footers[-1])
+
+                reader = csv.DictReader(fl,fieldnames=cols or None, delimiter=resource['txt_separator'] or ',', quotechar=resource['txt_quote'] or '"')
+                rows = []
+                for r in reader:
+                    r.update(hf)
+                    rows += [r]
+                if header_cols:
+                    rows = rows[1:]
+                if footer_cols:
+                    rows = rows[:-1]
+
             fl.close()
         elif resource['etl_type'] == 'db':
             cr = conn.cursor()
