@@ -32,12 +32,15 @@ from . import cbc_xmlrpc
 import logging
 _logger = logging.getLogger(__name__)
 
-def run(database, host=None, port=None, username=None, password=None, log_print=True):
+def run(database, host=None, port=None, username=None, password=None, log_print=True, job_id=False):
     cbc_local = cbc_xmlrpc.get_connection(hostname=host, port=port, database=database,
                                           login=username, password=password)
     etl = cbc_etl(cbc_local, log_print=log_print)
     for job in etl.get_jobs():
-        if etl.get_job_state(job['id']) != 'ready':
+        if job_id:
+            if job['id'] != job_id:
+                continue
+        elif etl.get_job_state(job['id']) != 'ready':
             continue
         cbc_local.get_model('etl.job').action_start([job['id']])
         for row in etl.get_rows(job['id']):

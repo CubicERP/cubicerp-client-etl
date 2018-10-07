@@ -29,5 +29,5 @@
 
 import cubicerpetl
 
-# cubicerpetl.run(database='test', hostname='localhost', port=28069, login='admin', password='admin')
+# cubicerpetl.run(database='test', hostname='localhost', port=28069, login='admin', password='admin', job_id=False)
 cubicerpetl.run('test')
