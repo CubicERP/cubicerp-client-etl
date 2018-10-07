@@ -46,7 +46,7 @@ def run(database, host=None, port=None, username=None, password=None, log_print=
         _split = 100
         rowss = []
         rows = etl.do_extract(job['extract_resource_id'][0],job['extract_server_id'][0],job['id'])
-        for i in range(int(len(rows) / _split) or 1)
+        for i in range(int(len(rows) / _split) or 1):
             rowss += [rows[i*_split:(i+1)*_split]]
         for rows in rowss:
             rows = etl.do_transform(rows, job['transform_id'][0], job['id'])
