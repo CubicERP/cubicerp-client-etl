@@ -43,7 +43,14 @@ def run(database, host=None, port=None, username=None, password=None, log_print=
         elif etl.get_job_state(job['id']) != 'ready':
             continue
         cbc_local.get_model('etl.job').action_start([job['id']])
-        for row in etl.get_rows(job['id']):
-            new_id = etl.create(job['id'], etl.get_values(job['id'],row), pk=row.get('pk',False))
+        _split = 100
+        rowss = []
+        rows = etl.do_extract(job['extract_resource_id'][0],job['extract_server_id'][0],job['id'])
+        for i in range(int(len(rows) / _split) or 1)
+            rowss += [rows[i*_split:(i+1)*_split]]
+        for rows in rowss:
+            rows = etl.do_transform(rows, job['transform_id'][0], job['id'])
+            rows = etl.do_load(rows, job['id'])
+
         cbc_local.get_model('etl.job').action_done([job['id']]) 
     _logger.info("Finish etl_cron") 
