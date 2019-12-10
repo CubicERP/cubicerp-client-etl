@@ -241,6 +241,7 @@ class cbc_etl(object):
                     footers = [r for r in reader]
                     hf.update(footers[-1])
 
+                fl.seek(0)
                 reader = csv.DictReader(fl,fieldnames=cols or None, delimiter=resource['txt_separator'] or ',', quotechar=resource['txt_quote'] or '"')
                 rows = []
                 for r in reader:
