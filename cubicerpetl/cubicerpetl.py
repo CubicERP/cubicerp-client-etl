@@ -302,7 +302,7 @@ class cbc_etl(object):
                         y = False
                     if type(y) is decimal.Decimal:
                         y = float(y)
-                    elif type(y) is str and query_encoding:
+                    elif type(y) not is str and query_encoding:
                         y = y.decode(query_encoding)
                     d[x] = y
             else:
@@ -311,7 +311,7 @@ class cbc_etl(object):
                         y = False
                     if type(y) is decimal.Decimal:
                         y = float(y)
-                    elif type(y) is str and query_encoding:
+                    elif type(y) not is str and query_encoding:
                         y = y.decode(query_encoding)
                     d[x] = y
             res.append(d)
