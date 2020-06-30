@@ -37,7 +37,9 @@ import os
 
 def get_connection(database, hostname=None, port=None, login=None, password=None):
     parser = SafeConfigParser()
-    filename = os.path.join(os.path.dirname(__file__), 'config.ini')
+    filename = os.path.join(os.environ['PWD'], 'config', 'etl.ini')
+    if not os.path.exists(filename):
+        filename = os.path.join(os.path.dirname(__file__), 'config.ini')
     parser.read(filename)
     if hostname is None:
         hostname = parser.get(database, 'host')
