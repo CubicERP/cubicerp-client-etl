@@ -35,9 +35,6 @@ setup(name='cubicerp-client-etl',
       author_email='info@cubicerp.com',
       url='http://cubicERP.com',
       packages=["cubicerpetl"],
-      install_requires=[
-          'openerp-client-lib',
-      ],
       keywords=["xmlrpc","cubicerp", "python client"],
       license="AGPLv3",
       classifiers=[
