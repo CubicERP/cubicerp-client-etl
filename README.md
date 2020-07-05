@@ -42,8 +42,6 @@ Compatibility
 -------------
 
 
-- 1.1
-
  - XML-RPC: Cubic ERP version 9.0 and superior
 
  - JSON-RPC: Cubic ERP version 9.0 and superior
@@ -52,6 +50,5 @@ Compatibility
 Changelog
 ---------
 
-- 1.1.1:
 
  - Updated documentation
