@@ -94,7 +94,7 @@ class cbc_etl(object):
         job_obj = self.local.get_model('etl.job')
         return job_obj.read([job_id])[0]['state']
     
-    def get_resource(self, resource_id):
+    def get_resource(self, resource_id, server_id=False):
         if self.__resources.get(resource_id):
             res = self.__resources[resource_id]
         else:
@@ -119,8 +119,22 @@ class cbc_etl(object):
 
             field_obj = self.local.get_model('etl.field')
             res['rpc_fields'] = []
-            for rpc_field_id in res['rpc_field_ids']:
-                field = field_obj.read([rpc_field_id])[0]
+            rpc_field_ids = res['rpc_field_ids']
+            if not rpc_field_ids and res['etl_type'] == 'rpc' and server_id and res['rpc_model_name']:
+                rpc_conn = self.get_connection(server_id)
+                field_obj = rpc_conn.get_model('ir.model.fields')
+                res['rpc_model_id'] = rpc_conn.get_model('ir.model').search([('model','=',res['rpc_model_name'])])[0]
+                rpc_field_ids = rpc_conn.get_model('ir.model.fields').search([('model_id','=',res['rpc_model_id'])])
+            for rpc_field_id in rpc_field_ids:
+                field = field_obj.read([rpc_field_id],['name','ttype','relation','field_name','value','mapping_id','field_type','search_null','name_search','field_relation'])[0]
+                if 'field_name' not in field:
+                    field['field_name'] = field['name']
+                    field['value'] = field['name']
+                    field['mapping_id'] = False
+                    field['field_type'] = field['ttype']
+                    field['search_null'] = False
+                    field['name_search'] = False
+                    field['field_relation'] = field['relation']
                 res['rpc_fields'].append(field)
 
             self.__resources[resource_id] = res
@@ -180,7 +194,7 @@ class cbc_etl(object):
                 server_id = job['extract_server_id'] and job['extract_server_id'][0] or None
         conn = server_id and self.get_connection(server_id) or self.local
         server = server_id and self.get_server(server_id) or {'encoding': False, 'etl_type': 'rpc'}
-        resource = self.get_resource(resource_id)
+        resource = self.get_resource(resource_id, server_id=server_id)
         query_encoding = resource['encoding'] or server['encoding']
         rows = []
         if resource['etl_type'] == 'fs':
@@ -603,7 +617,7 @@ class cbc_etl(object):
                 res['id'] = model_ids[0]
         fields = transform['fields']
         if not fields and self.get_resource(job['extract_resource_id'][0])['etl_type'] == 'rpc':
-            fields = [d for d in self.get_resource(job['extract_resource_id'][0])['rpc_fields'] if d['name'] not in ('id','pk')]
+            fields = [d for d in self.get_resource(job['extract_resource_id'][0], server_id=job['extract_server_id'][0])['rpc_fields'] if d['field_name'] not in ('id','pk')]
 
         for map in fields:
             val = eval(map['value'] or map['field_name'],row)
@@ -623,7 +637,9 @@ class cbc_etl(object):
                 pass
             elif map['field_type'] == 'many2one' or map['field_name'] == 'id':
                 if type(val) is not int:
-                    if not re.match(r'^[a-zA-Z_]+.[a-zA-Z_]+$',val):
+                    if type(val) is list or type(val) is tuple:
+                        val = val[0]
+                    elif not re.match(r'^[a-zA-Z_]+.[a-zA-Z_]+$',val):
                         if map['name_search']:
                             dom = eval(map['name_search'],row)
                         else:
