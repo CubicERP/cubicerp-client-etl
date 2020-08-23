@@ -286,7 +286,7 @@ class cbc_etl(object):
                 self.to_log(job_id, server_id, resource_id, localdict.get('to_log'))
                 rows = localdict.get('rows', [])
             else:
-                model_obj = self.local.get_model(resource['rpc_model_name'])
+                model_obj = conn.get_model(resource['rpc_model_name'])
                 model_ids = model_obj.search(eval(resource['rpc_domain'], localdict))
                 rows = model_obj.read(model_ids,[r['field_name'] for r in resource['rpc_fields']])
 
@@ -449,7 +449,7 @@ class cbc_etl(object):
                 model.unlink([r['id'] for r in rows if r.get('id', False)])
             cols = [f['field_name'] for f in resource['rpc_fields']]
             if not transform['reprocess'] or transform['reprocess'] in ['delete', 'insert']:
-                for row in [r for r in rows if r.get('id', False) is not None]:
+                for row in [r for r in rows]:
                     val = {}
                     for col in cols:
                         val[col] = row.get(col)
@@ -469,7 +469,7 @@ class cbc_etl(object):
                     val['id'] = row['id']
                     vals .append(val)
             if transform['reprocess'] in ['noupdate', 'update']:
-                for row in [r for r in rows if r.get('id', False) is not None and not r.get('id', False)]:
+                for row in [r for r in rows if not r.get('id', False)]:
                     val = {}
                     for col in cols:
                         val[col] = row.get(col)
@@ -587,23 +587,26 @@ class cbc_etl(object):
             return row
         transform_id = job['transform_id'][0]
         transform = self.get_transform(transform_id)
-        if row.get('pk'):
+        row_pk = row.get('pk')
+        if row_pk:
             res['pk'] = row['pk']
-        if job_id and row.get('pk') and transform['reprocess'] in ('noupdate', 'update', 'onlyupdate', 'delete'):
+        elif row.get('id'):
+            res['pk'] = row['id']
+            row_pk = row['id']
+        if job_id and row_pk and transform['reprocess'] in ('noupdate', 'update', 'onlyupdate', 'delete'):
             model_ids = []
-            res['id'] = False
-            for log in self.get_logs(job_id, row.get('pk'), level='info'):
+            res['id'] = None
+            for log in self.get_logs(job_id, row_pk, level='info'):
                 if log['model_id']:
                     model_ids.append(log['model_id'])
-            if model_ids and transform['reprocess'] == 'noupdate':
-                res['id'] = None
-            elif model_ids and transform['reprocess'] in ['update','delete']:
+            if model_ids:
                 res['id'] = model_ids[0]
-            elif not model_ids and transform['reprocess'] == 'onlyupdate':
-                res['id'] = None
+        fields = transform['fields']
+        if not fields and self.get_resource(job['extract_resource_id'][0])['etl_type'] == 'rpc':
+            fields = [d for d in self.get_resource(job['extract_resource_id'][0])['rpc_fields'] if d['name'] not in ('id','pk')]
 
-        for map in transform['fields']:
-            val = eval(map['value'],row)
+        for map in fields:
+            val = eval(map['value'] or map['field_name'],row)
             if map['mapping_id']:
                 val = self.get_value_mapping(map['mapping_id'][0],val)
             row['__value_mapping__'] = val
