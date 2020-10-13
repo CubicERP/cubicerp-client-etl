@@ -176,7 +176,7 @@ class cbc_etl(object):
                 self.__connections[server_id] = conn
         elif server['etl_type'] == 'db':
             lib = importlib.import_module(server.get('driver') or server['db_type'] or 'psycopg2')
-            conn = lib.connect(server.get('db_connection', "'dbname'=%s"%self.local.database))
+            conn = lib.connect(server.get('db_connection', "dbname=%s"%self.local.database))
         elif server['etl_type'] == 'fs':
             if server['fs_protocol'] == 'file':
                 lib = server.get('driver') and importlib.import_module(server['driver']) or cbc_file
@@ -294,11 +294,16 @@ class cbc_etl(object):
             cr.close()
             conn.close()
         elif resource['etl_type'] == 'rpc':
-            localdict = {'conn': conn, 'context': context, 'job': job_id and job or {}, }
+            _cr = importlib.import_module('psycopg2').connect("dbname=%s"%self.local.database).cursor()
+            localdict = {'conn': conn, 'context': context, 'job': job_id and job or {}, 'cr': _cr}
             if resource['rpc_python']:
                 exec(resource['rpc_python_code'], localdict)
                 self.to_log(job_id, server_id, resource_id, localdict.get('to_log'))
                 rows = localdict.get('rows', [])
+            elif job['template_run_from'] in ('single','multiple') and job['model_name']:
+                model_obj = conn.get_model(resource['rpc_model_name'])
+                model_ids = model_obj.search([('id','in',eval(job.get('model_ids','[]')))])
+                rows = model_obj.read(model_ids, [r['field_name'] for r in resource['rpc_fields']])
             else:
                 model_obj = conn.get_model(resource['rpc_model_name'])
                 model_ids = model_obj.search(eval(resource['rpc_domain'], localdict))
