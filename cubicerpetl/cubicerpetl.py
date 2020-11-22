@@ -35,6 +35,7 @@ import sys, traceback
 import importlib
 import os
 import csv
+import dbf
 if sys.version > '3':
     from io import StringIO
 else:
@@ -265,6 +266,21 @@ class cbc_etl(object):
                     rows = rows[1:]
                 if footer_cols:
                     rows = rows[:-1]
+            elif resource['f_type'] == 'dbf':
+                rows = []
+                if not cols:
+                    cols = list(fl.field_names)
+                localdict = {'conn': conn, 'context': context, 'job': job_id and job or {}, 'table': fl}
+                if resource['dbf_python']:
+                    exec(resource['dbf_python_code'], localdict)
+                    self.to_log(job_id, server_id, resource_id, localdict.get('to_log'))
+                    rows = localdict.get('rows', [])
+                else:
+                    if resource['dbf_domain']:
+                        recs = fl.query(eval(resource['dbf_domain'], localdict))
+                    for rec in recs:
+                        r = {c:rec[c] for c in cols}
+                        rows += [r]
 
             fl.close()
         elif resource['etl_type'] == 'db':
@@ -423,6 +439,25 @@ class cbc_etl(object):
                     for val in vals:
                         fl.write(query_encoding and ('%s\r\n' % val).encode(query_encoding) or '%s\r\n' % val)
                     fl.close()
+            elif resource['f_type'] == 'dbf':
+                if resource['dbf_python']:
+                    fl = conn.open(job['file_name'] or resource['f_filename'], "w")
+                    localdict = {'rows': rows, 'conn': conn, 'context': context, 'job': job_id and job or {}, 'table': fl}
+                    for row in rows:
+                        localdict['row'] = row
+                        exec(resource['dbf_python_code'], localdict)
+                        self.to_log(job_id, server_id, resource_id, localdict.get('to_log'))
+                        if localdict.get('break_on', False):
+                            break
+                    fl.close()
+                    return rows
+                vals += self.get_dbf_lines(rows, resource_id)
+                cols = [col['field_name'] or col['name'] for col in resource['f_columns']]
+                if server['etl_type'] == 'fs' and cols:
+                    fl = conn.open(job['file_name'] or resource['f_filename'], "w")
+                    for val in vals:
+                        fl.append(val)
+                    fl.close()
 
         elif resource['etl_type'] == 'db':
             cr = conn.cursor()
@@ -544,6 +579,16 @@ class cbc_etl(object):
         buf.seek(0)
         lines = [b and b[:-2] or '' for b in buf.readlines()]
         buf.close()
+        return lines
+
+    def get_dbf_lines(self, rows, resource_id):
+        lines = []
+        resource = self.get_resource(resource_id)
+        for row in rows:
+            val = {}
+            for col in resource['f_columns']:
+                val[col['field_name'] or col['name']] = col['forced_value'] or row.get(col['field_name'] or col['name'],'')
+            lines.append(val)
         return lines
     
     def get_resolve_xml_id(self, xml_id, server_id=False):
@@ -771,5 +816,13 @@ class cbc_file(object):
 
     def open(self, filename, mode="r"):
         filename = os.path.join(self.path, filename)
-        f = open(filename, mode)
+        if filename.split('.')[-1].lower() == 'dbf':
+            f = dbf.Table(filename)
+            if mode == 'r':
+                mode = dbf.READ_ONLY
+            else:
+                mode = dbf.READ_WRITE
+            f.open(mode=mode)
+        else:
+            f = open(filename, mode)
         return f
