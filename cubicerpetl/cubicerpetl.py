@@ -197,6 +197,8 @@ class cbc_etl(object):
         server = server_id and self.get_server(server_id) or {'encoding': False, 'etl_type': 'rpc'}
         resource = self.get_resource(resource_id, server_id=server_id)
         query_encoding = resource['encoding'] or server['encoding']
+        anho, mes, dia = job['date'].split('-')
+        localdict.update({'aaaa':anho, 'mm': mes, 'dd': dia, 'aa': anho[2:]})
         rows = []
         if resource['etl_type'] == 'fs':
             fl = StringIO()
@@ -204,10 +206,10 @@ class cbc_etl(object):
                 if job_id and job['input_file']:
                     fl = StringIO(base64.b64decode(str(job['input_file'])).decode(query_encoding or 'utf-8'))
                 elif server['etl_type'] == 'fs':
-                    fl = conn.open(job['file_name'] or resource['f_filename'])
+                    fl = conn.open(job['file_name'] or resource['f_filename'], localdict=localdict)
             else:
                 if server['etl_type'] == 'fs':
-                    fl = conn.open(job['file_name'] or resource['f_filename'])
+                    fl = conn.open(job['file_name'] or resource['f_filename'], localdict=localdict)
                 elif job_id and job['input_file']:
                     fl = StringIO(base64.b64decode(str(job['input_file'])).decode(query_encoding or 'utf-8'))
 
@@ -393,6 +395,8 @@ class cbc_etl(object):
         server = server_id and self.get_server(server_id) or {'encoding': False, 'etl_type': 'rpc'}
         resource = self.get_resource(resource_id)
         query_encoding = resource['encoding'] or server['encoding']
+        anho, mes, dia = job['date'].split('-')
+        localdict_open = {'aaaa': anho, 'mm': mes, 'dd': dia, 'aa': anho[2:]}
 
         if transform_id and server['etl_type'] == 'rpc' and rows:
             transform = self.get_transform(transform_id)
@@ -421,7 +425,7 @@ class cbc_etl(object):
                     vals += self.get_txt_lines(rows and [rows[-1]] or rows, resource['f_footer_id'][0])
 
                 if server['etl_type'] == 'fs':
-                    fl = conn.open(job['file_name'] or resource['f_filename'], "w")
+                    fl = conn.open(job['file_name'] or resource['f_filename'], "w", localdict=localdict_open)
                     for val in vals:
                         fl.write(query_encoding and ('%s\r\n' % val).encode(query_encoding) or '%s\r\n' % val)
                     fl.close()
@@ -435,13 +439,13 @@ class cbc_etl(object):
                 cols = [col['field_name'] or col['name'] for col in resource['f_columns']]
 
                 if server['etl_type'] == 'fs' and cols:
-                    fl = conn.open(job['file_name'] or resource['f_filename'], "w")
+                    fl = conn.open(job['file_name'] or resource['f_filename'], "w", localdict=localdict_open)
                     for val in vals:
                         fl.write(query_encoding and ('%s\r\n' % val).encode(query_encoding) or '%s\r\n' % val)
                     fl.close()
             elif resource['f_type'] == 'dbf':
                 if resource['dbf_python']:
-                    fl = conn.open(job['file_name'] or resource['f_filename'], "w")
+                    fl = conn.open(job['file_name'] or resource['f_filename'], "w", localdict=localdict_open)
                     localdict = {'rows': rows, 'conn': conn, 'context': context, 'job': job_id and job or {}, 'table': fl}
                     for row in rows:
                         localdict['row'] = row
@@ -454,7 +458,7 @@ class cbc_etl(object):
                 vals += self.get_dbf_lines(rows, resource_id)
                 cols = [col['field_name'] or col['name'] for col in resource['f_columns']]
                 if server['etl_type'] == 'fs' and cols:
-                    fl = conn.open(job['file_name'] or resource['f_filename'], "w")
+                    fl = conn.open(job['file_name'] or resource['f_filename'], "w", localdict=localdict_open)
                     for val in vals:
                         fl.append(val)
                     fl.close()
@@ -814,8 +818,8 @@ class cbc_file(object):
     def __init__(self, path):
         self.path = path
 
-    def open(self, filename, mode="r"):
-        filename = os.path.join(self.path, filename)
+    def open(self, filename, mode="r", localdict={}):
+        filename = os.path.join(self.path, filename%(localdict))
         if filename.split('.')[-1].lower() == 'dbf':
             f = dbf.Table(filename)
             if mode == 'r':
