@@ -28,6 +28,7 @@
 ##############################################################################
 
 import openerplib
+import odoolib
 import sys
 if sys.version > '3':
     from configparser import SafeConfigParser
@@ -52,3 +53,21 @@ def get_connection(database, hostname=None, port=None, login=None, password=None
         password = parser.get(database, 'password')
 
     return openerplib.get_connection(hostname=hostname, port=port, database=database, login=login, password=password)
+
+def connection(database, hostname=None, port=None, login=None, password=None):
+    parser = SafeConfigParser()
+    pwd = os.environ.get('ETL_INI_CONFIG_PWD', False) or os.environ['PWD']
+    filename = os.path.join(pwd, 'config', 'etl.ini')
+    if not os.path.exists(filename):
+        filename = os.path.join(os.path.dirname(__file__), 'config.ini')
+    parser.read(filename)
+    if hostname is None:
+        hostname = parser.get(database, 'host')
+    if port is None:
+        port = parser.getint(database, 'port')
+    if login is None:
+        login = parser.get(database, 'username')
+    if password is None:
+        password = parser.get(database, 'password')
+
+    return odoolib.get_connection(hostname=hostname, port=port, database=database, login=login, password=password)
