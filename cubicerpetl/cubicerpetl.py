@@ -449,7 +449,7 @@ class cbc_etl(object):
                     localdict = {'rows': rows, 'conn': conn, 'context': context, 'job': job_id and job or {}, 'table': fl}
                     for row in rows:
                         localdict['row'] = row
-                        exec(resource['dbf_python_code'], localdict)
+                        exec(resource['dbf_python_code'], globals(), localdict)
                         self.to_log(job_id, server_id, resource_id, localdict.get('to_log'))
                         if localdict.get('break_on', False):
                             break
