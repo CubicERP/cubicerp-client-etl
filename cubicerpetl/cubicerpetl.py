@@ -181,7 +181,7 @@ class cbc_etl(object):
         elif server['etl_type'] == 'fs':
             if server['fs_protocol'] == 'file':
                 lib = server.get('driver') and importlib.import_module(server['driver']) or cbc_file
-                conn = lib(server['fs_path'])
+                conn = lib(server['fs_path'], local=self.local)
             elif server['fs_protocol'] == 'ftp':
                 lib = importlib.import_module(server.get('driver') or 'ftplib.FTP')
                 conn = lib(server['fs_host'], server['login'], server['password'])
@@ -814,9 +814,11 @@ class cbc_etl(object):
 class cbc_file(object):
 
     path = None
+    local = None
 
-    def __init__(self, path):
+    def __init__(self, path. local=None):
         self.path = path
+        self.local = local
 
     def open(self, filename, mode="r", localdict={}):
         filename = os.path.join(self.path, filename%(localdict))
