@@ -819,6 +819,7 @@ class cbc_file(object):
     def __init__(self, path. local=None):
         self.path = path
         self.local = local
+        self.dbf = dbf
 
     def open(self, filename, mode="r", localdict={}):
         filename = os.path.join(self.path, filename%(localdict))
