@@ -816,7 +816,7 @@ class cbc_file(object):
     path = None
     local = None
 
-    def __init__(self, path. local=None):
+    def __init__(self, path, local=None):
         self.path = path
         self.local = local
         self.dbf = dbf
