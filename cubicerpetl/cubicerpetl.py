@@ -198,7 +198,7 @@ class cbc_etl(object):
         resource = self.get_resource(resource_id, server_id=server_id)
         query_encoding = resource['encoding'] or server['encoding']
         anho, mes, dia = job['date'].split('-')
-        localdict.update({'aaaa':anho, 'mm': mes, 'dd': dia, 'aa': anho[2:]})
+        localdict.update({'aaaa':anho, 'mm': mes, 'dd': dia, 'aa': anho[2:], 'encoding': query_encoding})
         rows = []
         if resource['etl_type'] == 'fs':
             fl = StringIO()
@@ -830,6 +830,8 @@ class cbc_file(object):
             else:
                 mode = dbf.READ_WRITE
             f.open(mode=mode)
+        elif localdict.get('encoding', False):
+            f = open(filename, mode, encoding=localdict['encoding'])
         else:
             f = open(filename, mode)
         return f
